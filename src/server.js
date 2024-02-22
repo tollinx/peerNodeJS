@@ -8,15 +8,6 @@ class PeerNode {
   }
 }
 
-export class Node {
-  constructor(uri, user) {
-    this.uri = uri;
-    this.user = user;
-  }
-}
-
-const servers = [];
-
 export function getNodes() {
   return [...servers];
 }
