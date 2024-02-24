@@ -1,3 +1,53 @@
+const PROTO_PATH = __dirname + './filesharing.proto'; 
+var grpc = require('@grpc/grpc-js');
+var protoLoader = require('@grpc/proto-loader');
+var packageDefinition = protoLoader.loadSync(
+    PROTO_PATH,
+    {keepCase: true,
+     longs: String,
+     enums: String,
+     defaults: true,
+     oneofs: true
+    });
+
+var filesharing_proto = grpc.loadPackageDefinition(packageDefinition).filesharing;
+
+const uploadFile = (call, callback) => {
+
+};
+
+const sendFile = (call) => {
+
+};
+
+const requestFile = (call, callback) => {
+
+};
+
+const verifyFile = (call, callback) => {
+
+}
+
+const listFiles = (call, callback) => {
+  
+};
+
+
+const server = new grpc.Server();
+
+server.addService(fileSharingProto.FileSharingService.service, {
+  uploadFile,
+  sendFile,
+  requestFile,
+  verifyFile,
+  listFiles
+});
+
+server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure(), () => {
+  server.start();
+  console.log('Server running at http://0.0.0.0:50051');
+});
+
 class PeerNode {
   constructor(id, ipAddress, portNumber, walletAddress) {
     this.id = id; //unique identifer for the peer
