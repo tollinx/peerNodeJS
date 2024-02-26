@@ -12,7 +12,8 @@
     "@libp2p/websockets": "^8.0.15",
     "libp2p": "^1.2.3",
     "libp2p-bootstrap": "^0.14.0",
-    "multiaddr": "^10.0.1"
+    "multiaddr": "^10.0.1",
+    "peer-id": "^0.16.0"
   },
   "name": "peernodejs",
   "description": "",
