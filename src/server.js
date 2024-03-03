@@ -1,6 +1,15 @@
-const PROTO_PATH = __dirname + './filesharing.proto'; 
-var grpc = require('@grpc/grpc-js');
-var protoLoader = require('@grpc/proto-loader');
+import grpc from '@grpc/grpc-js';
+import protoLoader from '@grpc/proto-loader';
+
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const PROTO_PATH = __dirname + '/filesharing.proto';
+
+
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
     {keepCase: true,
@@ -35,7 +44,7 @@ const listFiles = (call, callback) => {
 
 const server = new grpc.Server();
 
-server.addService(fileSharingProto.FileSharingService.service, {
+server.addService(filesharing_proto.FileSharingService.service, {
   uploadFile,
   sendFile,
   requestFile,

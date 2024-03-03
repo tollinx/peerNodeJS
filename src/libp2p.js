@@ -8,20 +8,31 @@ import { kadDHT } from '@libp2p/kad-dht'
 import { yamux } from '@chainsafe/libp2p-yamux'
 import { ping } from '@libp2p/ping' // remove this after done testing
 import { bootstrap } from '@libp2p/bootstrap'
-import PeerId from 'peer-id';
-import { generateKeyPair, marshalPrivateKey, unmarshalPrivateKey, marshalPublicKey, unmarshalPublicKey } from '@libp2p/crypto/keys'
-import { RSAPeerId, Ed25519PeerId, Secp256k1PeerId, PeerId } from '@libp2p/interface-peer-id'
 
-const createEd25519PeerId = async () => {
-    const key = await generateKeyPair('Ed25519')
-    const id = await createFromPrivKey(key)
+
+import grpc from '@grpc/grpc-js';
+import protoLoader from '@grpc/proto-loader';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+
+// import { generateKeyPair, marshalPrivateKey, unmarshalPrivateKey, marshalPublicKey, unmarshalPublicKey } from '@libp2p/crypto/keys'
+// import { RSAPeerId, Ed25519PeerId, Secp256k1PeerId, PeerId } from '@libp2p/interface-peer-id'
+
+
+// TODO: Add Encryption
+// const createEd25519PeerId = async () => {
+//     const key = await generateKeyPair('Ed25519')
+//     const id = await createFromPrivKey(key)
   
-    if (id.type === 'Ed25519') {
-      return id
-    }
+//     if (id.type === 'Ed25519') {
+//       return id
+//     }
   
-    throw new Error(`Generated unexpected PeerId type "${id.type}"`)
-  }
+//     throw new Error(`Generated unexpected PeerId type "${id.type}"`)
+//   }
 
 async function main() {
     // Store all the nodes we've created in a map of key=multiaddr and value=peerId 
@@ -29,8 +40,10 @@ async function main() {
 
     // Can manage creation of nodes here
     // For example, subscribe to events, handle incoming messages, etc.
+    // createNode("/dnsaddr/sg1.bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt", NodeMap)
 
-    createNode("/dnsaddr/sg1.bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt", NodeMap)
+    // For now we'll just create one node
+    createNode()
 
     // Forcefully quit main
     // process.on('SIGTERM', stop);
@@ -88,30 +101,56 @@ async function createNode(multiaddr, NodeMap) {
         }
     })
 
-    NodeMap.set(customPeerId, '/dnsaddr/sg1.bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt');
+    // NodeMap.set(customPeerId, '/dnsaddr/sg1.bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt');
 
         // node.connectionManager.on('peer:connect', (connection) => {
     //     console.info(`Connected to ${connection.remotePeer.toB58String()}!`)
     // })
 
-    console.log('listening on addresses: ')
-    node.getMultiaddrs().forEach((addr) => {
-        console.log(addr.toString())
-    })
+    // console.log('listening on addresses: ')
+    // node.getMultiaddrs().forEach((addr) => {
+    //     console.log(addr.toString())
+    // })
 
-
-    // Retrieve ip address of a bootstrap node:
+    // Testing purposes; Retrieve ip address of a bootstrap node:
     // dig -t TXT _dnsaddr.bootstrap.libp2p.io
     const targetAddress = '/dnsaddr/sg1.bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt'
+    
+    // Replace this with ip address of market server to connect to:
+    // Connect to the gRPC server
+    const serverMultiaddr = '/ip4/127.0.0.1/tcp/50051'
+
     try {
-        await node.dial(targetAddress)
-        stopNode(node)
+        await node.dial(serverMultiaddr)
+        // stopNode(node)
     } catch (err) {
         console.error(err)
     }
 
     startNode(node)
-    return customPeerId
+
+    const PROTO_PATH = __dirname + '/protos/helloworld.proto';
+
+    // Loading package specified in proto file
+    const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
+        keepCase: true,
+        longs: String,
+        enums: String,
+        defaults: true,
+        oneofs: true
+    });
+    let helloworld_proto = grpc.loadPackageDefinition(packageDefinition).helloworld;
+
+    // Create a gRPC client for the SendFile RPC method
+    let client = new helloworld_proto.FileSender('localhost:50051', grpc.credentials.createInsecure());
+
+    client.addFile({ hash: "12974", ip: "127.12.12", port: "80", price: "123" }, function (err, response) {
+        console.log(response);
+        console.log(err)
+    });
+
+    // TODO: Finish being able to retrieve peer id or unique identifier of nodes
+    // return customPeerId
 }
 
 // Need to pass in the reference to the node, but maybe use a data structure to keep track?
@@ -122,8 +161,8 @@ async function startNode(node) {
 }
 
 async function stopNode(node) {
-    const peerID = node.peerId.toB58String();
-    console.log("Stopping node: ", peerID)
+    // const peerID = node.peerId.toB58String();
+    // console.log("Stopping node: ", peerID)
     await node.stop();
 }
 
